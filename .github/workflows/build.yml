@@ -16,9 +16,13 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      # Install Python from the distro (no pip – avoids PEP 668 issues)
+      # Install Python from the distro (no pip – avoids PEP 668)
       - name: Install Python deps
-        run: apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3 python3-pil python3-requests git ca-certificates && python3 -c "import PIL,requests; print('Python deps OK')"
+        run: >
+          apt-get update &&
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends
+          python3 python3-pil python3-requests git ca-certificates &&
+          python3 -c "import PIL,requests; print('Python deps OK')"
 
       # Fetch Butano into third_party/butano
       - name: Fetch Butano
@@ -30,14 +34,9 @@ jobs:
       - name: Fetch + convert assets
         run: python3 tools/fetch_assets.py
 
-      # Build ROM with explicit devkitPro env so Butano can find its tool includes
+      # Build ROM (pass the Butano path explicitly)
       - name: Build ROM
-        env:
-          DEVKITPRO: /opt/devkitpro
-          DEVKITARM: /opt/devkitpro/devkitARM
-          PATH: /opt/devkitpro/devkitARM/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-          LIBBUTANO: ${{ github.workspace }}/third_party/butano/butano
-        run: make -j2
+        run: make -j2 LIBBUTANO="$GITHUB_WORKSPACE/third_party/butano/butano"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
