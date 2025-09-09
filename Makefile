@@ -1,8 +1,9 @@
 # -------- Project metadata --------
 TARGET := PuffQuestAdvance
 
-# -------- Auto-find Butano (prefers env override) --------
-# If LIBBUTANO is passed in (from CI), use it; otherwise search the repo.
+# -------- LIBBUTANO handling --------
+# Prefer LIBBUTANO passed on the make command line (from CI step).
+# If not provided, try to auto-detect in third_party/butano/*.
 LIBBUTANO ?=
 ifeq ($(strip $(LIBBUTANO)),)
   BUTANO_ROOT := $(CURDIR)/third_party/butano
@@ -16,16 +17,16 @@ ifeq ($(strip $(LIBBUTANO)),)
   endif
 endif
 
-# -------- (Optional) where code / headers / assets live --------
-SRC_DIRS    := src
-INC_DIRS    := include
-DATA_DIRS   := graphics audio
+# -------- Project layout --------
+SRC_DIRS  := src
+INC_DIRS  := include
+DATA_DIRS := graphics audio
 
-# Let Butano know our project layout (keeps things explicit)
+# Explicitly tell Butano where things are
 BN_PROJECT_NAME := $(TARGET)
 BN_SOURCES      := $(shell find $(SRC_DIRS) -name '*.cpp')
 BN_INCLUDES     := $(addprefix -I,$(INC_DIRS))
 BN_DATA_DIRS    := $(DATA_DIRS)
 
-# -------- Include Butano build system --------
+# -------- Bring in Butano build system --------
 include $(LIBBUTANO)/butano.mak
