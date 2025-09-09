@@ -1,4 +1,4 @@
-name: Build GBA ROM
+name: build
 
 on:
   push:
@@ -16,19 +16,28 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      # Install Python + deps from the distro to avoid pip PEP 668 issues
+      # Install Python & deps inside the devkitpro container (Debian based)
       - name: Install Python deps
-        run: apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3 python3-pip python3-pil python3-requests git ca-certificates
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            python3 python3-pip git ca-certificates
+          python3 -m pip install --upgrade pip
+          pip3 install pillow requests
 
+      # Fetch Butano source into third_party/butano
       - name: Fetch Butano
-        run: git clone --depth 1 https://github.com/GValiente/butano.git third_party/butano
+        uses: actions/checkout@v4
+        with:
+          repository: GValiente/butano
+          path: third_party/butano
 
+      # Generate placeholder assets locally (no internet required)
       - name: Fetch + convert assets
         run: python3 tools/fetch_assets.py
 
+      # Build ROM (Makefile now auto-detects Butano path)
       - name: Build ROM
-        env:
-          LIBBUTANO: ${{ github.workspace }}/third_party/butano/butano
         run: make -j2
 
       - name: Upload artifact
