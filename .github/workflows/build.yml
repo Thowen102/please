@@ -16,28 +16,27 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      # Install Python + deps from the distro (no pip; avoids PEP 668)
+      # Install Python from the distro (no pip – avoids PEP 668 issues)
       - name: Install Python deps
-        run: apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3 python3-pil python3-requests git ca-certificates && python3 -c "import PIL,requests; print('Python deps OK')"
+        run: >
+          apt-get update &&
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends
+          python3 python3-pil python3-requests git ca-certificates &&
+          python3 -c "import PIL,requests; print('Python deps OK')"
 
-      # ✅ Fetch Butano reliably via git clone
+      # Fetch Butano into third_party/butano
       - name: Fetch Butano
         run: |
           rm -rf third_party/butano
           git clone --depth 1 --branch master https://github.com/GValiente/butano.git third_party/butano
 
-      # (optional) Quick check so we know butano.mk exists where Makefile expects it
-      - name: Debug list butano files
-        run: |
-          ls -la third_party/butano | sed -n '1,120p' || true
-          ls -la third_party/butano/butano | sed -n '1,120p' || true
-
       # Generate local placeholder assets (no network)
       - name: Fetch + convert assets
         run: python3 tools/fetch_assets.py
 
+      # Build ROM (point Make to butano.mak explicitly)
       - name: Build ROM
-        run: make -j2
+        run: make -j2 LIBBUTANO="$GITHUB_WORKSPACE/third_party/butano/butano"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
