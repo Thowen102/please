@@ -2,19 +2,18 @@
 TARGET := PuffQuestAdvance
 
 # -------- LIBBUTANO handling --------
-# Prefer LIBBUTANO passed on the make command line (from CI step).
-# If not provided, try to auto-detect in third_party/butano/*.
-LIBBUTANO ?=
-ifeq ($(strip $(LIBBUTANO)),)
-  BUTANO_ROOT := $(CURDIR)/third_party/butano
-  ifneq ("$(wildcard $(BUTANO_ROOT)/butano/butano.mak)","")
-    LIBBUTANO := $(BUTANO_ROOT)/butano
-  else ifneq ("$(wildcard $(BUTANO_ROOT)/butano.mak)","")
-    LIBBUTANO := $(BUTANO_ROOT)
-  else
-    $(error Could not find butano.mak. Expected at \
-      $(BUTANO_ROOT)/butano/butano.mak or $(BUTANO_ROOT)/butano.mak)
-  endif
+# We prefer LIBBUTANO passed by CI; otherwise try to auto-detect.
+LIBBUTANO ?= $(CURDIR)/third_party/butano/butano
+
+# If the usual path doesn't exist, try older layout (without the extra /butano)
+ifeq ("$(wildcard $(LIBBUTANO)/butano_dka.mak)","")
+  LIBBUTANO := $(CURDIR)/third_party/butano
+endif
+
+# Hard fail if we still can't find the toolchain makefile:
+ifeq ("$(wildcard $(LIBBUTANO)/butano_dka.mak)","")
+  $(error Could not find butano_dka.mak. Looked in \
+    $(CURDIR)/third_party/butano/butano and $(CURDIR)/third_party/butano)
 endif
 
 # -------- Project layout --------
@@ -22,11 +21,13 @@ SRC_DIRS  := src
 INC_DIRS  := include
 DATA_DIRS := graphics audio
 
-# Explicitly tell Butano where things are
+# Tell Butano where our stuff lives
 BN_PROJECT_NAME := $(TARGET)
 BN_SOURCES      := $(shell find $(SRC_DIRS) -name '*.cpp')
 BN_INCLUDES     := $(addprefix -I,$(INC_DIRS))
 BN_DATA_DIRS    := $(DATA_DIRS)
 
-# -------- Bring in Butano build system --------
-include $(LIBBUTANO)/butano.mak
+# -------- Include Butano build system (toolchain-specific) --------
+# Directly include the devkitARM makefile; this avoids the extra indirection
+# that was producing a wrong absolute path (/butano_dka.mak).
+include $(LIBBUTANO)/butano_dka.mak
