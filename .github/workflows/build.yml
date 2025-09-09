@@ -16,7 +16,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      # Install Python from the distro (no pip – avoids PEP 668 issues)
+      # Install Python from the distro (no pip – avoids PEP 668)
       - name: Install Python deps
         run: >
           apt-get update &&
@@ -34,7 +34,7 @@ jobs:
       - name: Fetch + convert assets
         run: python3 tools/fetch_assets.py
 
-      # Build ROM (point Make to butano.mak explicitly)
+      # Build ROM (explicitly pass the Butano path)
       - name: Build ROM
         run: make -j2 LIBBUTANO="$GITHUB_WORKSPACE/third_party/butano/butano"
 
