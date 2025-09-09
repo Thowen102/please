@@ -16,9 +16,9 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      # Install Python & tools inside the container (Debian/Ubuntu-based)
+      # Install Python + deps from the distro to avoid pip PEP 668 issues
       - name: Install Python deps
-        run: apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3 python3-pip git ca-certificates && python3 -m pip install --upgrade pip && pip3 install pillow requests
+        run: apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3 python3-pip python3-pil python3-requests git ca-certificates
 
       - name: Fetch Butano
         run: git clone --depth 1 https://github.com/GValiente/butano.git third_party/butano
