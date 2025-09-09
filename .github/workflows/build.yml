@@ -19,7 +19,7 @@ jobs:
       # Install Python from the distro (no pip – avoids PEP 668)
       - name: Install Python deps
         run: |
-          pacman -Sy --noconfirm python python-pillow python-requests git ca-certificates &&
+          dkp-pacman -Sy --noconfirm --needed python python-pillow python-requests git ca-certificates
           python - <<'PY'
 import PIL, requests
 print('Python deps OK')
