@@ -1,33 +1,35 @@
-# -------- Project metadata --------
+# ================== Project ==================
 TARGET := PuffQuestAdvance
 
-# -------- LIBBUTANO handling --------
-# We prefer LIBBUTANO passed by CI; otherwise try to auto-detect.
-LIBBUTANO ?= $(CURDIR)/third_party/butano/butano
+# ================== devkitPro toolchain (set here so CI never depends on container env) ==================
+DEVKITPRO ?= /opt/devkitpro
+DEVKITARM ?= $(DEVKITPRO)/devkitARM
+export DEVKITPRO DEVKITARM
 
-# If the usual path doesn't exist, try older layout (without the extra /butano)
-ifeq ("$(wildcard $(LIBBUTANO)/butano_dka.mak)","")
+# Ensure the toolchain binaries are on PATH for sub-makefiles
+PATH := $(DEVKITARM)/bin:$(PATH)
+export PATH
+
+# ================== Butano path ==================
+# Passed in by workflow; falls back to common checkout locations.
+LIBBUTANO ?= $(CURDIR)/third_party/butano/butano
+ifeq ("$(wildcard $(LIBBUTANO)/butano.mak)","")
   LIBBUTANO := $(CURDIR)/third_party/butano
 endif
-
-# Hard fail if we still can't find the toolchain makefile:
-ifeq ("$(wildcard $(LIBBUTANO)/butano_dka.mak)","")
-  $(error Could not find butano_dka.mak. Looked in \
-    $(CURDIR)/third_party/butano/butano and $(CURDIR)/third_party/butano)
+ifeq ("$(wildcard $(LIBBUTANO)/butano.mak)","")
+  $(error Could not find butano.mak under third_party/butano. Make sure the workflow cloned GValiente/butano)
 endif
 
-# -------- Project layout --------
+# ================== Project layout ==================
 SRC_DIRS  := src
 INC_DIRS  := include
 DATA_DIRS := graphics audio
 
-# Tell Butano where our stuff lives
 BN_PROJECT_NAME := $(TARGET)
 BN_SOURCES      := $(shell find $(SRC_DIRS) -name '*.cpp')
 BN_INCLUDES     := $(addprefix -I,$(INC_DIRS))
 BN_DATA_DIRS    := $(DATA_DIRS)
 
-# -------- Include Butano build system (toolchain-specific) --------
-# Directly include the devkitARM makefile; this avoids the extra indirection
-# that was producing a wrong absolute path (/butano_dka.mak).
-include $(LIBBUTANO)/butano_dka.mak
+# ================== Include Butano build system ==================
+# Use the main Butano makefile; it will bring in the devkitARM-specific rules.
+include $(LIBBUTANO)/butano.mak
