@@ -16,13 +16,12 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      # Install Python from the distro (no pip – avoids PEP 668)
-      - name: Install Python deps
+      # Install tooling from the distro (no pip – avoids PEP 668)
+      - name: Install tools
         run: |
-          dkp-pacman -Sy --noconfirm --needed python python-pillow python-requests git ca-certificates
+          dkp-pacman -Sy --noconfirm --needed python git ca-certificates
           python - <<'PY'
-import PIL, requests
-print('Python deps OK')
+print('Python OK')
 PY
 
       # Fetch Butano into third_party/butano
