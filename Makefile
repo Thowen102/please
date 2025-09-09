@@ -1,29 +1,31 @@
 # -------- Project metadata --------
-TARGET      := PuffQuestAdvance
+TARGET := PuffQuestAdvance
 
-# (Optional ROM header—safe defaults)
-ROMTITLE    := PUFFQUEST ADV
-ROMCODE     := PQAV
-MAKER       := 01
-REVISION    := 0
-
-# -------- Auto-find Butano --------
-# After the workflow checks out GValiente/butano into third_party/butano,
-# butano.mk can live in:
-#   third_party/butano/butano/butano.mk  (common)
-#   third_party/butano/butano.mk         (older layout)
-BUTANO_ROOT := $(CURDIR)/third_party/butano
-
-ifeq ($(wildcard $(BUTANO_ROOT)/butano/butano.mk),)
-  ifeq ($(wildcard $(BUTANO_ROOT)/butano.mk),)
-    $(error Could not find butano.mk. Expected at \
-      $(BUTANO_ROOT)/butano/butano.mk or $(BUTANO_ROOT)/butano.mk. \
-      Ensure the workflow step 'Fetch Butano' created third_party/butano)
+# -------- Auto-find Butano (prefers env override) --------
+# If LIBBUTANO is passed in (from CI), use it; otherwise search the repo.
+LIBBUTANO ?=
+ifeq ($(strip $(LIBBUTANO)),)
+  BUTANO_ROOT := $(CURDIR)/third_party/butano
+  ifneq ("$(wildcard $(BUTANO_ROOT)/butano/butano.mak)","")
+    LIBBUTANO := $(BUTANO_ROOT)/butano
+  else ifneq ("$(wildcard $(BUTANO_ROOT)/butano.mak)","")
+    LIBBUTANO := $(BUTANO_ROOT)
+  else
+    $(error Could not find butano.mak. Expected at \
+      $(BUTANO_ROOT)/butano/butano.mak or $(BUTANO_ROOT)/butano.mak)
   endif
-  LIBBUTANO := $(BUTANO_ROOT)
-else
-  LIBBUTANO := $(BUTANO_ROOT)/butano
 endif
 
+# -------- (Optional) where code / headers / assets live --------
+SRC_DIRS    := src
+INC_DIRS    := include
+DATA_DIRS   := graphics audio
+
+# Let Butano know our project layout (keeps things explicit)
+BN_PROJECT_NAME := $(TARGET)
+BN_SOURCES      := $(shell find $(SRC_DIRS) -name '*.cpp')
+BN_INCLUDES     := $(addprefix -I,$(INC_DIRS))
+BN_DATA_DIRS    := $(DATA_DIRS)
+
 # -------- Include Butano build system --------
-include $(LIBBUTANO)/butano.mk
+include $(LIBBUTANO)/butano.mak
