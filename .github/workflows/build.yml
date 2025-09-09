@@ -18,11 +18,12 @@ jobs:
 
       # Install Python from the distro (no pip – avoids PEP 668)
       - name: Install Python deps
-        run: >
-          apt-get update &&
-          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends
-          python3 python3-pil python3-requests git ca-certificates &&
-          python3 -c "import PIL,requests; print('Python deps OK')"
+        run: |
+          pacman -Sy --noconfirm python python-pillow python-requests git ca-certificates &&
+          python - <<'PY'
+import PIL, requests
+print('Python deps OK')
+PY
 
       # Fetch Butano into third_party/butano
       - name: Fetch Butano
